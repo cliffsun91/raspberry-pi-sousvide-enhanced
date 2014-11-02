@@ -25,7 +25,6 @@ class LoopTempReader(object):
 		self.file_writer.append_to_end_of_file("---------- Temp Logging Started {0} ----------\n".format(self.get_time_now()))
 		while True:
 			try:
-				sleep(10)
 				temps = reader.read_temps()
 				avg_temp = reader.get_average_temp()
 				time = self.get_time_now()
@@ -39,13 +38,14 @@ class LoopTempReader(object):
 					avg_temp_string = u"\t({0}) Average temp: {1}{2}\n".format(time, str(avg_temp), u"\u00b0"+'C')
 					self.file_writer.append_to_end_of_file(avg_temp_string)
 				self.truncate_temp_logs(self.log_file, self.max_lines)
+				sleep(10)
 			except (KeyboardInterrupt, SystemExit):
 				print 'Stopping writing to temp logs now! Adding end marker to temp file'
 				self.file_writer.append_to_end_of_file("---------- Temp Logging Stopped ----------\n")
 				raise
 
 	def truncate_temp_logs(self, log_file, max_lines):
-		num_lines = sum(1 for line in open(log_file))
+		num_lines = sum(1 for line in open(log_file, "a+"))
 		if num_lines > max_lines:
 			with open(log_file, 'r') as f_read:
 				lines = f_read.readlines()
