@@ -3,10 +3,7 @@ from time import sleep
 import datetime
 import sys
 from temp_reader import SensorRepository, TempReader 
-
-# Load the 1-wire modules (if modules are loaded on boot these two lines can be commented out)
-#os.system('modprobe w1-gpio')
-#os.system('modprobe w1-therm')
+from sensor_installer import SensorInstaller
 
 
 class LoopTempReader(object):
@@ -70,6 +67,8 @@ class FileWriter(object):
 
 
 def main():
+	sensor_installer = SensorInstaller()
+	sensor_installer.setup_sensors()
 	loopReader = LoopTempReader()
 	loopReader.loop_read()
 

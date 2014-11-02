@@ -2,21 +2,16 @@ import os
 from subprocess import Popen, PIPE, call
 from argparse import ArgumentParser
 from time import sleep
+from sensor_installer import SensorInstaller
 
-
-class TempReader(object):
-	def tempdata(self):
+class OldTempReader(object):
+	def get_average_temp(self):
     	# Replace 28-000003ae0350 with the address of your DS18B20
     	pipe = Popen(["cat","/sys/bus/w1/devices/w1_bus_master1/28-000003ea0350/w1_slave"], stdout=PIPE)
     	result = pipe.communicate()[0]
     	result_list = result.split("=")
     	temp_mC = int(result_list[-1]) # temp in milliCelcius
     	return temp_mC
-
-
-class SensorInstaller(object):
-	def setup_1wire(self):
-  		os.system("sudo modprobe w1-gpio && sudo modprobe w1-therm")
 
 
 class RemoteTransmitter(object):
@@ -40,8 +35,8 @@ class SousVide(object):
 		self.pwr_tot=0 #unused currently, why?
 
 		# Setup 1Wire for DS18B20
-		installer = SensorInstaller()
-		installer.setup_1wire()
+		sensor_installer = SensorInstaller()
+		sensor_installer.setup_sensors()
 
 		self.heat_source = RemoteTransmitter()
 
@@ -49,19 +44,20 @@ class SousVide(object):
 		# Turn on for initial ramp up
 		state="on"
 		self.heat_source.turn_on()
+		
+		sensors = SensorRepository()
+		temp_reader = TempReader(sensors)
 
-		temp_reader = TempReader()
-
-		temperature = temp_reader.tempdata()
+		temperature = temp_reader.get_average_temp()
 		print("Initial temperature ramp up")
 		while (self.target - temperature > 6000):
 			sleep(15)
-		temperature = temp_reader.tempdata()
+		temperature = temp_reader.get_average_temp()
 		print(temperature)
 
 		print("Entering control loop")
 		while True:
-			temperature=temp_reader.tempdata()
+			temperature=temp_reader.get_average_temp()
 			print(temperature)
 			error = self.target - temperature
 			self.interror = self.interror + error
@@ -75,12 +71,12 @@ class SousVide(object):
 				if (power > x):
 					if (state=="off"):
 						state="on"
-						print("On")
+						print("Turning on the heat!")
 						self.heat_source.turn_on()
 				else:
 					if (state=="on"):
 						state="off"
-						print("Off")
+						print("Turning off the heat!")
 						self.heat_source.turn_off()
 				sleep(1)
 
