@@ -27,6 +27,7 @@ class LoopTempReader(object):
 			try:
 				sleep(10)
 				temps = reader.read_temps()
+				avg_temp = reader.get_average_temp()
 				time = self.get_time_now()
 				index = 0
 				for temp in temps:
@@ -35,6 +36,8 @@ class LoopTempReader(object):
 										format(index, time, str(temp), u"\u00b0"+'C')
 					#print temp_string.encode("UTF-8")
 					self.file_writer.append_to_end_of_file(temp_string)
+					avg_temp_string = u"\t({0}) Average temp: {1}{2}\n".format(time, str(avg_temp), u"\u00b0"+'C')
+					self.file_writer.append_to_end_of_file(avg_temp_string)
 				self.truncate_temp_logs(self.log_file, self.max_lines)
 			except (KeyboardInterrupt, SystemExit):
 				print 'Stopping writing to temp logs now! Adding end marker to temp file'

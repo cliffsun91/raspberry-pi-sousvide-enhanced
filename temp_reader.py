@@ -25,6 +25,10 @@ class TempReader(object):
 	def __init__(self, sensors):
 		self.sensors = sensors
 
+	def get_average_temp(self):
+		temps = self.read_temps()
+		return sum(temps)/len(temps)
+
 	def read_temps(self):
 		return map(lambda s: s.read_temp(), self.sensors)
 						
